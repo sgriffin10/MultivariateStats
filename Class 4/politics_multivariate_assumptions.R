@@ -2,7 +2,7 @@
 # Let's import the CSV file
 # Set the working directory first (different from yours)
 # Set the working directory where your file is.
-setwd("C:/Users/echan1/Dropbox/QTM 3610 Sp 2019/")
+setwd("/Users/sgriffin/Documents/GitHub/MultivariateStats/Class 4/")
 # Now, read the file data into R
 politics <- read.csv("political.csv")
 #Now, the data is stored
@@ -70,6 +70,6 @@ det(pol_cov)
 det(pol_cor)
 
 #equality across group's covariance matrices
-install.packages("biotools")
+install.packages("biotools", dependencies = TRUE)
 library(biotools)
 boxM(politics[,-1],politics[,1])

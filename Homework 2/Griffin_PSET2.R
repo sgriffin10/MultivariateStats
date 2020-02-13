@@ -158,12 +158,6 @@ crPlots(soldprice)
 
 #4.k)
 durbinWatsonTest(soldprice)
-#Notice that there IS an issue with autocorrelation here, (low p value)
-#however, it is not totally applicable here since it is not time series data
-#Not applicable for time data
-#D-W test statistics run between 0 and 4. 
-#If D-W is 2.0, no autocorrelation. (this is the most desired value; if p value is under 0.05 there is an issue)
-#If D-W below 2.0, positive autocorrelation.
-#If D-W above 2.0, negative autocorrelation.
+
 
 

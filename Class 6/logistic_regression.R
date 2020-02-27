@@ -3,9 +3,9 @@
 #Let's use the political data once again
 
 # Set the working directory where your file is.
-setwd("C:/Users/echan1/Dropbox/QTM 3610 Fall 2020/")
+setwd("/users/sgriffin//Documents//GitHub/MultivariateStats/Class 6/")
 # Now, read the file data into R
-politics <- read.csv("political.csv")
+politics <- read.csv("political-1.csv")
 #Now, the data is stored
 
 View(politics)

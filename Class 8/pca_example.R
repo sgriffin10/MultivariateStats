@@ -1,6 +1,7 @@
 
 data("USArrests")
 head(USArrests, 10)
+View(USArrests)
 
 #It is usually beneficial for each variable to be centered at zero for PCA
 # Then, we can always use covariance matrix!
@@ -8,6 +9,7 @@ head(USArrests, 10)
 #standardize variables
 # apply(data, 1=row or 2=column, scale function which normalizes data to 0)
 scaled_df <- apply(USArrests, 2, scale)
+View(scaled_df)
 
 #Find and use covariance matrix
 arrests.cov <- cov(scaled_df)

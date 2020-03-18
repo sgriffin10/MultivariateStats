@@ -83,7 +83,7 @@ df2.new = df2.new[-c(1, 9, 18:26)] #deletes redundant columns created by library
 
 lm_model = lm(Price~.,df2.new) #creates regression model
 summary(lm_model) #summary of regression model
-prediction = predict(lm_model, data.frame(Size = 2500, Lot = 5, Bath = 2, Bed = 4, Year = 1960, Garage = 2, Elemadams=0, Elemcrest = 0, Elemedge = 0, Elemedison = 0, Elemharris = 1, Elemparker = 0)) #prediction using specific parameters
+prediction = predict(lm_model, data.frame(Size = 2.5, Lot = 5, Bath = 2, Bed = 4, Year = 1960, Garage = 2, Elemadams=0, Elemcrest = 0, Elemedge = 0, Elemedison = 0, Elemharris = 1, Elemparker = 0)) #prediction using specific parameters
 print(prediction) 
 
 # install.packages("car") #comment out after installing library
@@ -107,10 +107,10 @@ durbinWatsonTest(lm_model) # Test for Autocorrelated Errors (independence)
 
 vif(lm_model) #Evaluates Collinearity
 
+####d.)#### 
 # install.packages("psych") #comment out after installing library
 library(psych)
 corr_matrix2 = cor(df2[c(2:8)], use = "everything") #creates correlation matrix
-####change n-factos report this####
 pc_result = principal(corr_matrix2, nfactors=7,rotate="none") #outputs principal components
 pc_result 
 
@@ -134,21 +134,27 @@ df3 = read.csv("birthweight.csv")
 View(df3)
 
 #research conducted using https://www.urmc.rochester.edu/encyclopedia/content.aspx?contenttypeid=90&contentid=p02382
+#and #https://www.medicalnewstoday.com/articles/321003#other-factors
 
 #### a.) ####
-df3$white[df3$RACE == 1] = 1
+
+#dummying the race variables
+df3$white[df3$RACE == 1] = 1 
 df3$white[df3$RACE != 1] = 0
 df3$black[df3$RACE == 2] = 1
 df3$black[df3$RACE != 2] = 0
 df3$other[df3$RACE == 3] = 1
 df3$other[df3$RACE != 3] = 0
 
-df3$underweight[df3$LWT < 95] = 1 #https://www.medicalnewstoday.com/articles/321003#other-factors
+#creating variable with 95lbs cutoff
+df3$underweight[df3$LWT < 95] = 1 
 df3$underweight[df3$LWT >= 95] = 0
 
+#creating variable with 2 visit cutoff
 df3$frequentvisits[df3$FTV > 2] = 1 
 df3$frequentvisits[df3$FTV <= 2] = 0
 
+#creating variable with 25 years cutoff based on race
 df3$young_and_black[df3$AGE <= 25 & df3$black == 1] = 1 
 df3$young_and_black[df3$AGE > 25 | df3$black != 1] = 0
 df3$young_and_white[df3$AGE <= 25 & df3$white == 1] = 1 
@@ -156,50 +162,46 @@ df3$young_and_white[df3$AGE > 25 | df3$white != 1] = 0
 df3$young_and_other[df3$AGE <= 25 & df3$other == 1] = 1 
 df3$young_and_other[df3$AGE > 25 | df3$other != 1] = 0
 
-df3 = df3[-c(4)]
+df3 = df3[-c(4)] #delete original race variable
 
 #Run a logistic regression
 attach(df3)
 weight_prob <- glm(LOW ~., 
             family = "binomial",
-            data = df3)
+            data = df3) #logistic model with all variables
 summary(weight_prob)
 
-#interpert the independent variables' coefficients
-exp(coef(weight_prob))
+exp(coef(weight_prob)) #outputs independent variables' coefficients
 
-#interpret the y's
-df3$predicted <- predict(weight_prob) #These are logged values predicted from the logistic regression
+df3$predicted <- predict(weight_prob) #logged values predicted from the logistic regression
 df3$weight_prob <- (exp(predict(weight_prob))) / (1+(exp(predict(weight_prob))))
 View(df3)
 
-df3$score[df3$predicted >= 0.5] = 1
+#creates score metric variable to measure accuracy 
+df3$score[df3$predicted >= 0.5] = 1 
 df3$score[df3$predicted < 0.5] = 0
 
-# Run a second logistic regression 
 weight_prob2 <- glm(LOW ~ SMOKE+PTL+underweight+frequentvisits+young_and_black+young_and_other+young_and_white, 
             family = "binomial",
-            data = df3)
+            data = df3) #logistic model with chosen variables
 summary(weight_prob2)
 
 #interpert the independent variables' coefficients
 exp(coef(weight_prob2))
 
-#interpret the y's
-df3$predicted2 <- predict(weight_prob2) #These are logged values predicted from the logistic regression
+
+df3$predicted2 <- predict(weight_prob2) #logged values predicted from the logistic regression
 df3$weight_prob2 <- (exp(predict(weight_prob2))) / (1+(exp(predict(weight_prob2))))
 View(df3)
 exp(coef(weight_prob2))
 df3$score2[df3$predicted2 >= 0.5] = 1
 df3$score2[df3$predicted2 < 0.5] = 0
 
+#accuracy measure divided by n
 sum(df3$score-df3$LOW == 0)/189
 sum(df3$score2-df3$LOW == 0)/189
 
 #Check Assumptions
-
-#independence (that variables are independently distributed)
-#however, we can deduce that each observation is independent of each other given that they are different people.
 
 #multicollinearity
 library(car)
@@ -207,19 +209,13 @@ vif(weight_prob)
 vif(weight_prob2)
 
 #Goodness of fit tests
-
 logLik(weight_prob)
 logLik(weight_prob2)
-#The larger the absolute value of the log likelihood, the worse the fit. The second model looks better.
-
 
 #Likelihood Ratio Test
 # install.packages("lmtest") #comment out after installing library
 library(lmtest)
 lrtest(weight_prob,weight_prob2)
-#Here, H0 is that smaller model is better.
-# If low p-value, then reject that.
-# Here, the larger model is better fit.
 
 #Psuedo R-squared (look at McFadden)
 library(pscl)
@@ -254,27 +250,20 @@ library(psych)
 cortest.bartlett(corr_matrix,n = 329) #runs Bartlett Test
 det(corr_matrix) #Finds determinant of correlation matrix
 
+#### b.) ####
 
-#standardize variables
-scaled_df4 <- apply(df4_subset, 2, scale)
+scaled_df4 <- apply(df4_subset, 2, scale) #standardizes variables
+
+df4.cov <- cov(scaled_df4) #outputs covariance matrix
 
 
-#Find and use covariance matrix
-df4.cov <- cov(scaled_df4)
-
-# Find and use eigenvector of the covariance matrix
-df4.eigen <- eigen(df4.cov)
-# This gives you the eigenvalues and eigenvectors
+df4.eigen <- eigen(df4.cov) #outputs eigenvectors of the covariance matrix
 df4.eigen
 
-# Extract the eigenvectors (also called loadings in PCA)
-# We'll just take the first 4 columns
-vectors <- df4.eigen$vectors[,1:4]
+vectors <- df4.eigen$vectors[,1:4] # Extracts the eigenvectors for first 4 columns 
 vectors
-vectors <- -vectors
+vectors <- -vectors #removes negative signs
 vectors
-
-head(df4_subset)
 
 row.names(vectors) <- c("Climate", "HousingCost", "Healthcare", "Transp", "Educ", "Arts")
 colnames(vectors) <- c("PC1", "PC2", "PC3", "PC4")
@@ -286,46 +275,132 @@ PC3 <- as.matrix(scaled_df4) %*% vectors[,3]
 PC4 <- as.matrix(scaled_df4) %*% vectors[,4]
 
 
-# We can then create a data frame with Principal Components scores
+# Creates data frame with Principal Components scores
 PC <- data.frame(City = df4$City, PC1, PC2, PC3, PC4)
 head(PC)
 View(PC)
 
-remove.packages("ggplot2")
-remove.packages("mlr")
-install.packages("mlr")
 install.packages("ggplot2")
-library(ggplot)
-# Plot Principal Components for each State
+library(ggplot2)
+
+# Plots Principal Components for each State
 ggplot(PC, aes(PC1, PC2)) + 
   modelr::geom_ref_line(h = 0) +
   modelr::geom_ref_line(v = 0) +
-  geom_text(aes(label = City), size = 3) +
+  geom_text(aes(label = City), size = 2) +
   xlab("First Principal Component") + 
   ylab("Second Principal Component") + 
-  ggtitle("First Two Principal Components of df4 Rated Data")
-
+  ggtitle("First Two Principal Components of DF4 Rated Data")
 
 library(psych)
-View(places_rated)
+View(df4)
 
-places_rated1 <- places_rated[,-1]
+df4_1 <- df4[,-1]
 
-View(places_rated1)
+View(df4_1)
 
-pca_places <- prcomp(places_rated1, scale = TRUE)
-pca_places
+pca_df4 <- prcomp(df4_1, scale = TRUE)
+pca_df4
 
-places_cor <- cor(places_rated1)
+df4_cor <- cor(df4_1)
 
-scree(places_cor, main = "scree plot")
+scree(df4_cor, main = "scree plot") #plots scree plot of all variables
 
-pca_places_prin2 <- principal(places_rated1, nfactors=4,rotate="none")
-pca_places_prin2
-fa.diagram(pca_places_prin2)
+#### 5 ####
+
+df5 = read.csv("candydata.csv")
+View(df5)
+
+#### a.) ####
+corr_matrix = cor(df5[c(2:13)], use = "everything") #creates a correlation matrix for all 8 numeric values (columns 1-8)
+corr_matrix
+# install.packages("corrplot") #install package
+library(corrplot)
+corrplot(corr_matrix, type="upper")
+
+attach(df5)
+choc_prob <- glm(chocolate ~ hard+peanutyalmondy+crispedricewafer+nougat+bar,  
+            family = "binomial",
+            data = df5) #logistic model with all variables
+summary(choc_prob)
+exp(coef(choc_prob)) #outputs independent variables' coefficients
+
+df5$predicted <- predict(choc_prob) #logged values predicted from the logistic regression
+df5$choc_prob <- (exp(predict(choc_prob))) / (1+(exp(predict(choc_prob))))
+# View(df5)
 
 
-biplot(pca_places)
+
+#SECOND MODEL
+choc_prob2 <- glm(chocolate ~ fruity+peanutyalmondy+bar+pricepercent+hard, #fruity+hard+peanutyalmondy+crispedricewafer+nougat
+            family = "binomial",
+            data = df5) #logistic model with all variables
+summary(choc_prob2)
+exp(coef(choc_prob2)) #outputs independent variables' coefficients
+
+df5$predicted2 <- predict(choc_prob2) #logged values predicted from the logistic regression
+df5$choc_prob2 <- (exp(predict(choc_prob2))) / (1+(exp(predict(choc_prob2))))
+View(df5)
+
+#creates score metric variable to measure accuracy 
+df5$score[df5$predicted >= 0.5] = 1 
+df5$score[df5$predicted < 0.5] = 0
+df5$score2[df5$predicted2 >= 0.5] = 1 
+df5$score2[df5$predicted2 < 0.5] = 0
+
+sum(df5$score-df5$chocolate == 0)/85
+sum(df5$score2-df5$chocolate == 0)/85
+
+
+#### b. & c) ####
+
+win_lm_model = lm(winpercent~fruity+hard+peanutyalmondy+crispedricewafer,df5) #creates regression model
+summary(win_lm_model) #summary of regression model
+
+win_lm_model2 = lm(winpercent~peanutyalmondy+crispedricewafer+hard+bar+sugarpercent,df5) #creates regression model fruity+peanutyalmondy+bar+crispedricewafer,df5)
+summary(win_lm_model2) #summary of regression model
+
+win_lm_model3 = lm(winpercent~chocolate,df5)
+summary(win_lm_model3)
+
+model_list = list(win_lm_model,win_lm_model2,win_lm_model3)
+library(car)
+for (model in model_list){
+  par(mfrow=c(2,3))
+  outlierTest(model) #gives observations that are outliers
+  
+  qqPlot(model, main="QQ Plot") #plots outliers using a Q-Q plot of the residuals
+  
+  resid_lm_model <- resid(model) #calculates residuals of lm model
+  resid_lm_model
+  hist(resid_lm_model, 
+       main="Distribution of Residuals") #creates histogram of residuals
+  
+  plot(model) # tests for Equal Variance
+  ncvTest(model)
+  
+  crPlots(model) # Evaluates linearity
+  
+  durbinWatsonTest(model) # Test for Autocorrelated Errors (independence)
+  
+  
+  # vif(model) #Evaluates Collinearity
+}
+#### d.) ####
+install.packages("modelr")
+library(modelr)
+grid = data.frame(x = df5$winpercent)
+percent_pred = add_predictions(grid, win_lm_model, var="pred")
+percent_pred
+grid2 = data.frame(percent_pred)
+grid2$new = abs(grid2$pred-grid2$x)
+mean(grid2$new)
+sd(grid2$new)
+median(grid2$new)
+
+
+
+
 
 
 

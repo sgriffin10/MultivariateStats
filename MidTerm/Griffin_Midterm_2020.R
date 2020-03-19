@@ -193,7 +193,6 @@ exp(coef(weight_prob2))
 df3$predicted2 <- predict(weight_prob2) #logged values predicted from the logistic regression
 df3$weight_prob2 <- (exp(predict(weight_prob2))) / (1+(exp(predict(weight_prob2))))
 View(df3)
-exp(coef(weight_prob2))
 df3$score2[df3$predicted2 >= 0.5] = 1
 df3$score2[df3$predicted2 < 0.5] = 0
 
@@ -274,12 +273,6 @@ PC2 <- as.matrix(scaled_df4) %*% vectors[,2]
 PC3 <- as.matrix(scaled_df4) %*% vectors[,3]
 PC4 <- as.matrix(scaled_df4) %*% vectors[,4]
 
-
-# Creates data frame with Principal Components scores
-PC <- data.frame(City = df4$City, PC1, PC2, PC3, PC4)
-head(PC)
-View(PC)
-
 install.packages("ggplot2")
 library(ggplot2)
 
@@ -306,7 +299,12 @@ df4_cor <- cor(df4_1)
 
 scree(df4_cor, main = "scree plot") #plots scree plot of all variables
 
-#### 5 ####
+#### c.) ####
+# Creates data frame with Principal Components scores
+PC <- data.frame(City = df4$City, PC1, PC2, PC3, PC4)
+View(PC)
+
+#### Problem 5 ####
 
 df5 = read.csv("candydata.csv")
 View(df5)
@@ -352,7 +350,7 @@ sum(df5$score-df5$chocolate == 0)/85
 sum(df5$score2-df5$chocolate == 0)/85
 
 
-#### b. & c) ####
+#### b.) & c.) ####
 
 win_lm_model = lm(winpercent~fruity+hard+peanutyalmondy+crispedricewafer,df5) #creates regression model
 summary(win_lm_model) #summary of regression model
@@ -360,12 +358,12 @@ summary(win_lm_model) #summary of regression model
 win_lm_model2 = lm(winpercent~peanutyalmondy+crispedricewafer+hard+bar+sugarpercent,df5) #creates regression model fruity+peanutyalmondy+bar+crispedricewafer,df5)
 summary(win_lm_model2) #summary of regression model
 
-win_lm_model3 = lm(winpercent~chocolate,df5)
+win_lm_model3 = lm(winpercent~chocolate,df5) #regression model with only chocolat
 summary(win_lm_model3)
 
-model_list = list(win_lm_model,win_lm_model2,win_lm_model3)
+model_list = list(win_lm_model,win_lm_model2,win_lm_model3) #list of models
 library(car)
-for (model in model_list){
+for (model in model_list){ #loops through all models and plots residuals
   par(mfrow=c(2,3))
   outlierTest(model) #gives observations that are outliers
   
@@ -383,17 +381,18 @@ for (model in model_list){
   
   durbinWatsonTest(model) # Test for Autocorrelated Errors (independence)
   
-  
-  # vif(model) #Evaluates Collinearity
 }
+
 #### d.) ####
 install.packages("modelr")
 library(modelr)
 grid = data.frame(x = df5$winpercent)
-percent_pred = add_predictions(grid, win_lm_model, var="pred")
+percent_pred = add_predictions(grid, win_lm_model, var="pred") #creates dataframe with actual and predicted win percentages
 percent_pred
-grid2 = data.frame(percent_pred)
-grid2$new = abs(grid2$pred-grid2$x)
+grid2 = data.frame(percent_pred) #new dataframe that I can actually manipulate
+grid2$new = abs(grid2$pred-grid2$x) #absolute value of difference
+
+#metrics below
 mean(grid2$new)
 sd(grid2$new)
 median(grid2$new)

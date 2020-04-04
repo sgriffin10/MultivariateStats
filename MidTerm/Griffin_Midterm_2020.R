@@ -146,6 +146,12 @@ df3$black[df3$RACE != 2] = 0
 df3$other[df3$RACE == 3] = 1
 df3$other[df3$RACE != 3] = 0
 
+df3 = df3[-c(4)] #delete original race variable
+
+attach(df3)
+low_prob = glm(LOW~AGE+SMOKE+PTL+other+white+black, family = "binomial", data = df3)
+summary(low_prob)
+
 #creating variable with 95lbs cutoff
 df3$underweight[df3$LWT < 95] = 1 
 df3$underweight[df3$LWT >= 95] = 0
